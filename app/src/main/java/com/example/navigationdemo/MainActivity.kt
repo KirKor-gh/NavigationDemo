@@ -23,51 +23,56 @@ import com.example.navigationdemo.ui.theme.NavigationDemoTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            NavigationDemoTheme {
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    MainScreen(
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun MainScreen(modifier: Modifier = Modifier) {
+        val backStack = rememberNavBackStack(HomeScreen)
+        val onNavigation: (NavKey) -> Unit = {
+            backStack.add(it)
+        }
+        val onClearBackStack: () -> Unit = {
+            while (backStack.size > 1) {
+                backStack.removeLastOrNull()
+            }
+        }
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            entryProvider = entryProvider {
+                entry<HomeScreen> {
+                    Home(onNavigation)
+                }
+                entry<WelcomeScreen>(
+                    metadata = mapOf("extraDataKey" to "extraDataValue")
+                ) { key ->
+                    Welcome(onNavigation, key.name)
+                }
+                entry<ProfileScreen> {
+                    Profile(onClearBackStack)
+                }
+            }
+        )
+    }
+
+    @Preview(showBackground = true)
+    @Composable
+    fun MainScreenPreview() {
         NavigationDemoTheme {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                MainScreen(
-                    modifier = Modifier.padding(innerPadding)
-                )
+                MainScreen(modifier = Modifier.padding(innerPadding))
             }
-        }
-    }
-}
-
-@Composable
-fun MainScreen(modifier: Modifier = Modifier) {
-    val backStack = rememberNavBackStack(HomeScreen)
-    val onNavigation: (NavKey) -> Unit = {
-        backStack.add(it)
-    }
-    val onClearBackStack: () -> Unit = {
-        while (backStack.size > 1) {
-            backStack.removeLastOrNull()
-        }
-    }
-    NavDisplay(
-        backStack = backStack,
-        onBack = { backStack.removeLastOrNull() },
-        entryProvider = entryProvider {
-            entry<HomeScreen> {
-                Home(onNavigation)
-            }
-            entry<WelcomeScreen>(
-                metadata = mapOf("extraDataKey" to "extraDataValue")
-            ) { key ->
-                Welcome(onNavigation, key.name)
-            }
-            entry<ProfileScreen> {
-                Profile(onClearBackStack)
-            }
-        }
-    )
-}
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    NavigationDemoTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            MainScreen(modifier = Modifier.padding(innerPadding))
         }
     }
 }
